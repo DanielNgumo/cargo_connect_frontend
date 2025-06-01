@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { User, Mail, Lock, Phone, Check, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
+import PhoneInput from 'react-phone-input-2';
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
+import 'react-phone-input-2/lib/style.css'; // Import react-phone-input CSS-2
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -18,159 +20,166 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  // In your SignUp component, update the fetch URLs:
+    // Log signup attempt
+    console.log('Signup attempt', {
+      email,
+      phone_number: phoneNumber,
+      user_type: userType,
+      timestamp: new Date().toISOString(),
+    });
 
-const handleSignupSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+    // Basic frontend validation for phone number
+    if (!phoneNumber || phoneNumber.length < 7) {
+      setError('Please enter a valid phone number');
+      setLoading(false);
+      toast.error('Please enter a valid phone number', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+      return;
+    }
 
-  // Log signup attempt
-  console.log('Signup attempt', {
-    email,
-    user_type: userType,
-    timestamp: new Date().toISOString(),
-  });
-
-  try {
-    const response = await fetch(
-      'http://127.0.0.1:8000/api/signup', // Use full URL
-      {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/signup', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json' // Add Accept header
+          'Accept': 'application/json',
         },
-        // Remove credentials: 'include' for now since we're not using CSRF for API
         body: JSON.stringify({
           name,
           email,
-          phone_number: phoneNumber,
+          phone_number: `+${phoneNumber.replace(/^\+/, '')}`, // Ensure + prefix
           password,
           password_confirmation: passwordConfirmation,
           user_type: userType,
         }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.message || data.errors
+          ? Object.values(data.errors).flat().join(', ')
+          : 'Signup failed';
+        throw new Error(errorMessage);
       }
-    );
 
-    const data = await response.json();
+      // Log successful signup
+      console.log('Signup successful', {
+        email,
+        phone_number: phoneNumber,
+        user_type: userType,
+        timestamp: new Date().toISOString(),
+      });
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Signup failed');
+      // Show success toast
+      toast.success('Signup successful! Please enter the OTP sent to your email.', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+
+      // Show OTP input field
+      setShowOtp(true);
+    } catch (err: any) {
+      // Log error
+      console.error('Signup error', {
+        error: err.message,
+        email,
+        phone_number: phoneNumber,
+        user_type: userType,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Set error state for form display
+      setError(err.message || 'An error occurred during signup');
+
+      // Show error toast
+      toast.error(err.message || 'An error occurred during signup', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Log successful signup
-    console.log('Signup successful', {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    // Log OTP verification attempt
+    console.log('OTP verification attempt', {
       email,
-      user_type: userType,
       timestamp: new Date().toISOString(),
     });
 
-    // Show success toast
-    toast.success('Signup successful! Please enter the OTP sent to your email.', {
-      position: 'top-right',
-      autoClose: 5000,
-    });
-
-    // Show OTP input field
-    setShowOtp(true);
-  } catch (err: any) {
-    // Log error
-    console.error('Signup error', {
-      error: err.message,
-      email,
-      user_type: userType,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Set error state for form display
-    setError(err.message || 'An error occurred during signup');
-
-    // Show error toast
-    toast.error(err.message || 'An error occurred during signup', {
-      position: 'top-right',
-      autoClose: 5000,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleOtpSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
-
-  // Log OTP verification attempt
-  console.log('OTP verification attempt', {
-    email,
-    timestamp: new Date().toISOString(),
-  });
-
-  try {
-    const response = await fetch(
-      'http://127.0.0.1:8000/api/verify-otp', // Use full URL
-      {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/verify-otp', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json' // Add Accept header
+          'Accept': 'application/json',
         },
-        // Remove credentials: 'include' for now
         body: JSON.stringify({ email, code: otp }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.message || data.errors
+          ? Object.values(data.errors).flat().join(', ')
+          : 'OTP verification failed';
+        throw new Error(errorMessage);
       }
-    );
 
-    const data = await response.json();
+      // Log successful OTP verification
+      console.log('OTP verification successful', {
+        email,
+        timestamp: new Date().toISOString(),
+      });
 
-    if (!response.ok) {
-      throw new Error(data.message || 'OTP verification failed');
+      // Store token (if returned)
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+      }
+
+      // Show success toast
+      toast.success('OTP verified successfully! Redirecting...', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+
+      // Delay navigation to allow toast to be visible
+      setTimeout(() => {
+        navigate('/');
+      }, 3000); // 3-second delay before navigation
+    } catch (err: any) {
+      // Log error
+      console.error('OTP verification error', {
+        error: err.message,
+        email,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Set error state for form display
+      setError(err.message || 'An error occurred during OTP verification');
+
+      // Show error toast
+      toast.error(err.message || 'An error occurred during OTP verification', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+    } finally {
+      setLoading(false);
     }
-
-    // Log successful OTP verification
-    console.log('OTP verification successful', {
-      email,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Store token (if returned)
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-    }
-
-    // Show success toast
-    toast.success('OTP verified successfully! Redirecting...', {
-      position: 'top-right',
-      autoClose: 5000,
-    });
-
-    // Delay navigation to allow toast to be visible
-    setTimeout(() => {
-      navigate('/');
-    }, 3000); // 3-second delay before navigation
-  } catch (err: any) {
-    // Log error
-    console.error('OTP verification error', {
-      error: err.message,
-      email,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Set error state for form display
-    setError(err.message || 'An error occurred during OTP verification');
-
-    // Show error toast
-    toast.error(err.message || 'An error occurred during OTP verification', {
-      position: 'top-right',
-      autoClose: 5000,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -283,15 +292,22 @@ const handleOtpSubmit = async (e: React.FormEvent) => {
                   Phone Number
                 </label>
                 <div className="relative">
-                  <Phone className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
-                    id="phone_number"
-                    type="tel"
+                  <Phone className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2 z-10" />
+                  <PhoneInput
+                    country={'us'} // Default country (can be dynamic based on user location)
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    required
+                    onChange={(value) => setPhoneNumber(value)}
                     disabled={loading}
-                    className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    enableSearch={true} // Enable searchable country dropdown
+                    searchPlaceholder="Search country" // Customize search placeholder
+                    inputProps={{
+                      id: 'phone_number',
+                      required: true,
+                    }}
+                    containerClass="w-full"
+                    inputClass={`w-full pl-12 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${loading ? 'bg-gray-100' : ''}`}
+                    buttonClass="border-gray-200"
+                    dropdownClass="rounded-lg shadow-lg"
                     placeholder="+1234567890"
                   />
                 </div>
@@ -428,7 +444,7 @@ const handleOtpSubmit = async (e: React.FormEvent) => {
         )}
       </div>
 
-      {/* Custom Animations */}
+      {/* Custom Animations and react-phone-input-2 Styles */}
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
@@ -439,6 +455,30 @@ const handleOtpSubmit = async (e: React.FormEvent) => {
         }
         .animation-delay-2000 {
           animation-delay: -2s;
+        }
+        /* Override react-phone-input-2 styles */
+        .react-tel-input .flag-dropdown {
+          background-color: transparent;
+          border: none;
+        }
+        .react-tel-input .selected-flag {
+          padding-left: 40px; /* Adjust for Phone icon */
+        }
+        .react-tel-input .search {
+          padding: 8px;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .react-tel-input .search input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #e5e7eb;
+          border-radius: 4px;
+          outline: none;
+          font-size: 14px;
+        }
+        .react-tel-input .search input:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
       `}</style>
     </div>
