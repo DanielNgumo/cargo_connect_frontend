@@ -1,19 +1,83 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Assumes React Router for navigation
+import { Link, useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for login logic (e.g., API call)
-    console.log('Login attempt:', { email, password });
+    setError('');
+    setLoading(true);
+
+    // Log form submission attempt
+    console.log('Login attempt', { email, timestamp: new Date().toISOString() });
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Store token in localStorage
+      localStorage.setItem('authToken', data.token);
+
+      // Log successful login
+      console.log('Login successful', {
+        email,
+        token: data.token,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Show success toast
+      toast.success('Login successful! Redirecting...', {
+        position: 'top-right',
+        autoClose: 5000, // Increased to 5 seconds
+      });
+
+      // Delay navigation to allow toast to be visible
+      setTimeout(() => {
+        navigate('/');
+      }, 3000); // 3-second delay before navigation
+    } catch (err: any) {
+      // Log error
+      console.error('Login error', {
+        error: err.message,
+        email,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Set error state for form display
+      setError(err.message || 'An error occurred during login');
+
+      // Show error toast
+      toast.error(err.message || 'An error occurred during login', {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Toast Container */}
+      <ToastContainer />
+
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
@@ -36,6 +100,13 @@ const Login = () => {
           <p className="text-gray-600 mt-2">Access your account to start shipping smarter.</p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-6">
+            {error}
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -50,7 +121,8 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 placeholder="you@example.com"
               />
             </div>
@@ -68,7 +140,8 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 placeholder="••••••••"
               />
             </div>
@@ -85,10 +158,13 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2"
+            disabled={loading}
+            className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            <span>Login</span>
-            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <span>{loading ? 'Logging in...' : 'Login'}</span>
+            {!loading && <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
       </div>
