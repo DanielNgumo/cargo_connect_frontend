@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { User, Mail, Lock, Phone, Check, ChevronRight } from 'lucide-react';
+import { User, Mail, Lock, Phone, Check, ChevronRight, Building, Contact } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import PhoneInput from 'react-phone-input-2';
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
-import 'react-phone-input-2/lib/style.css'; // Import react-phone-input CSS-2
+import 'react-toastify/dist/ReactToastify.css';
+import 'react-phone-input-2/lib/style.css';
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -13,6 +13,8 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [userType, setUserType] = useState<'shipper' | 'agent'>('shipper');
+  const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState('');
+  const [contactPerson, setContactPerson] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [otp, setOtp] = useState('');
   const [showOtp, setShowOtp] = useState(false);
@@ -33,15 +35,27 @@ const SignUp = () => {
       timestamp: new Date().toISOString(),
     });
 
-    // Basic frontend validation for phone number
+    // Frontend validation
     if (!phoneNumber || phoneNumber.length < 7) {
       setError('Please enter a valid phone number');
       setLoading(false);
-      toast.error('Please enter a valid phone number', {
-        position: 'top-right',
-        autoClose: 5000,
-      });
+      toast.error('Please enter a valid phone number', { position: 'top-right', autoClose: 5000 });
       return;
+    }
+
+    if (userType === 'agent') {
+      if (!businessRegistrationNumber.trim()) {
+        setError('Business registration number is required for agents');
+        setLoading(false);
+        toast.error('Business registration number is required for agents', { position: 'top-right', autoClose: 5000 });
+        return;
+      }
+      if (!contactPerson.trim()) {
+        setError('Contact person is required for agents');
+        setLoading(false);
+        toast.error('Contact person is required for agents', { position: 'top-right', autoClose: 5000 });
+        return;
+      }
     }
 
     try {
@@ -54,10 +68,12 @@ const SignUp = () => {
         body: JSON.stringify({
           name,
           email,
-          phone_number: `+${phoneNumber.replace(/^\+/, '')}`, // Ensure + prefix
+          phone_number: `+${phoneNumber.replace(/^\+/, '')}`,
           password,
           password_confirmation: passwordConfirmation,
           user_type: userType,
+          business_registration_number: userType === 'agent' ? businessRegistrationNumber : null,
+          contact_person: userType === 'agent' ? contactPerson : null,
         }),
       });
 
@@ -70,7 +86,6 @@ const SignUp = () => {
         throw new Error(errorMessage);
       }
 
-      // Log successful signup
       console.log('Signup successful', {
         email,
         phone_number: phoneNumber,
@@ -78,16 +93,13 @@ const SignUp = () => {
         timestamp: new Date().toISOString(),
       });
 
-      // Show success toast
       toast.success('Signup successful! Please enter the OTP sent to your email.', {
         position: 'top-right',
         autoClose: 5000,
       });
 
-      // Show OTP input field
       setShowOtp(true);
     } catch (err: any) {
-      // Log error
       console.error('Signup error', {
         error: err.message,
         email,
@@ -96,14 +108,8 @@ const SignUp = () => {
         timestamp: new Date().toISOString(),
       });
 
-      // Set error state for form display
       setError(err.message || 'An error occurred during signup');
-
-      // Show error toast
-      toast.error(err.message || 'An error occurred during signup', {
-        position: 'top-right',
-        autoClose: 5000,
-      });
+      toast.error(err.message || 'An error occurred during signup', { position: 'top-right', autoClose: 5000 });
     } finally {
       setLoading(false);
     }
@@ -114,7 +120,6 @@ const SignUp = () => {
     setError('');
     setLoading(true);
 
-    // Log OTP verification attempt
     console.log('OTP verification attempt', {
       email,
       timestamp: new Date().toISOString(),
@@ -139,43 +144,32 @@ const SignUp = () => {
         throw new Error(errorMessage);
       }
 
-      // Log successful OTP verification
       console.log('OTP verification successful', {
         email,
         timestamp: new Date().toISOString(),
       });
 
-      // Store token (if returned)
       if (data.token) {
         localStorage.setItem('authToken', data.token);
       }
 
-      // Show success toast
       toast.success('OTP verified successfully! Redirecting...', {
         position: 'top-right',
         autoClose: 5000,
       });
 
-      // Delay navigation to allow toast to be visible
       setTimeout(() => {
-        navigate('/');
-      }, 3000); // 3-second delay before navigation
+        navigate(userType === 'agent' && !data.user.is_approved ? '/pending-approval' : '/');
+      }, 3000);
     } catch (err: any) {
-      // Log error
       console.error('OTP verification error', {
         error: err.message,
         email,
         timestamp: new Date().toISOString(),
       });
 
-      // Set error state for form display
       setError(err.message || 'An error occurred during OTP verification');
-
-      // Show error toast
-      toast.error(err.message || 'An error occurred during OTP verification', {
-        position: 'top-right',
-        autoClose: 5000,
-      });
+      toast.error(err.message || 'An error occurred during OTP verification', { position: 'top-right', autoClose: 5000 });
     } finally {
       setLoading(false);
     }
@@ -183,17 +177,13 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Toast Container */}
       <ToastContainer />
-
-      {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
       </div>
 
       <div className="relative max-w-md w-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
             <User className="w-4 h-4" />
@@ -212,7 +202,6 @@ const SignUp = () => {
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-6">
             {error}
@@ -221,7 +210,6 @@ const SignUp = () => {
 
         {!showOtp ? (
           <>
-            {/* User Type Toggle */}
             <div className="inline-flex bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg mb-6 w-full justify-center">
               <button
                 onClick={() => setUserType('shipper')}
@@ -247,7 +235,6 @@ const SignUp = () => {
               </button>
             </div>
 
-            {/* Signup Form */}
             <form onSubmit={handleSignupSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -294,12 +281,12 @@ const SignUp = () => {
                 <div className="relative">
                   <Phone className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2 z-10" />
                   <PhoneInput
-                    country={'us'} // Default country (can be dynamic based on user location)
+                    country={'us'}
                     value={phoneNumber}
                     onChange={(value) => setPhoneNumber(value)}
                     disabled={loading}
-                    enableSearch={true} // Enable searchable country dropdown
-                    searchPlaceholder="Search country" // Customize search placeholder
+                    enableSearch={true}
+                    searchPlaceholder="Search country"
                     inputProps={{
                       id: 'phone_number',
                       required: true,
@@ -313,8 +300,48 @@ const SignUp = () => {
                 </div>
               </div>
 
+              {userType === 'agent' && (
+                <>
+                  <div>
+                    <label htmlFor="business_registration_number" className="block text-sm font-medium text-gray-700 mb-1">
+                      Business Registration Number
+                    </label>
+                    <div className="relative">
+                      <Building className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                      <input
+                        id="text"
+                        type="business_registration_number"
+                        value={businessRegistrationNumber}
+                        onChange={(e) => setBusinessRegistrationNumber(e.target.value)}
+                        required
+                        disabled={loading}
+                        className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        placeholder="e.g., ABC123456"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="contact_person" className="block" text-sm="" font-medium="" text-gray-700="" mb-1="">
+                      Contact Person
+                    </label>
+                    <div className="relative">
+                      <Contact className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                      <input
+                        id="contact_person"
+                        type="text"
+                        value={contactPerson}
+                        onChange={(e) => setContactPerson(e.target.value)}
+                        required
+                        disabled={loading}
+                        className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                        placeholder="e.g., Jane Doe"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="password" className="block" text-sm="" font-medium="" text-gray-700="" mb-1="">
                   Password
                 </label>
                 <div className="relative">
@@ -326,7 +353,7 @@ const SignUp = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="w-full pl-80 p-3 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     placeholder="••••••••"
                   />
                 </div>
@@ -394,7 +421,6 @@ const SignUp = () => {
             </form>
           </>
         ) : (
-          /* OTP Form */
           <form onSubmit={handleOtpSubmit} className="space-y-6">
             <div>
               <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
@@ -409,8 +435,8 @@ const SignUp = () => {
                   onChange={(e) => setOtp(e.target.value)}
                   required
                   disabled={loading}
-                  className="w-full pl-10 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                  placeholder="123456"
+                  className="w-full pl-10 p-3 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  placeholder="e.g., 123456"
                 />
               </div>
             </div>
@@ -444,43 +470,43 @@ const SignUp = () => {
         )}
       </div>
 
-      {/* Custom Animations and react-phone-input-2 Styles */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: -2s;
-        }
-        /* Override react-phone-input-2 styles */
-        .react-tel-input .flag-dropdown {
-          background-color: transparent;
-          border: none;
-        }
-        .react-tel-input .selected-flag {
-          padding-left: 40px; /* Adjust for Phone icon */
-        }
-        .react-tel-input .search {
-          padding: 8px;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        .react-tel-input .search input {
-          width: 100%;
-          padding: 8px;
-          border: 1px solid #e5e7eb;
-          border-radius: 4px;
-          outline: none;
-          font-size: 14px;
-        }
-        .react-tel-input .search input:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          .animate-float {
+            animation: float 6s ease-in-out infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: -2s;
+          }
+          .react-tel-input .flag-dropdown {
+            background-color: transparent;
+            border: none;
+          }
+          .react-tel-input .selected-flag {
+            padding-left: 40px;
+          }
+          .react-tel-input .search {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .react-tel-input .search input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+          }
+          .react-tel-input .search input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+          }
+        `}
+      </style>
     </div>
   );
 };

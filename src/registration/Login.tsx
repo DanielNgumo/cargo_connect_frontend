@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ChevronRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,13 +16,12 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    // Log form submission attempt
     console.log('Login attempt', { email, timestamp: new Date().toISOString() });
 
     try {
       const response = await fetch('http://127.0.0.1:8000/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ login: email, password }),
       });
 
@@ -32,38 +31,43 @@ const Login = () => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store token in localStorage
       localStorage.setItem('authToken', data.token);
 
-      // Log successful login
       console.log('Login successful', {
         email,
         token: data.token,
+        user_type: data.user.user_type,
+        is_approved: data.user.is_approved,
         timestamp: new Date().toISOString(),
       });
 
-      // Show success toast
-      toast.success('Login successful! Redirecting...', {
+      toast.success('Login successful! Redirecting successful...', {
         position: 'top-right',
-        autoClose: 5000, // Increased to 5 seconds
+        autoClose: 3000,
       });
 
-      // Delay navigation to allow toast to be visible
+      // Role-based redirects
       setTimeout(() => {
-        navigate('/');
-      }, 3000); // 3-second delay before navigation
+        if (data.user.user_type === 'admin') {
+          navigate('/admin');
+        } else if (data.user.user_type === 'agent') {
+          if (!data.user.is_approved) {
+            navigate('/pending-approval');
+          } else {
+            navigate('/create-route');
+          }
+        } else if (data.user.user_type === 'shipper') {
+          navigate('/book-shipment');
+        }
+      }, 3000);
     } catch (err: any) {
-      // Log error
       console.error('Login error', {
         error: err.message,
         email,
         timestamp: new Date().toISOString(),
       });
 
-      // Set error state for form display
       setError(err.message || 'An error occurred during login');
-
-      // Show error toast
       toast.error(err.message || 'An error occurred during login', {
         position: 'top-right',
         autoClose: 5000,
@@ -75,17 +79,12 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Toast Container */}
       <ToastContainer />
-
-      {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
       </div>
-
       <div className="relative max-w-md w-full bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Lock className="w-4 h-4" />
@@ -99,15 +98,11 @@ const Login = () => {
           </h2>
           <p className="text-gray-600 mt-2">Access your account to start shipping smarter.</p>
         </div>
-
-        {/* Error Message */}
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-6">
             {error}
           </div>
         )}
-
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -127,7 +122,6 @@ const Login = () => {
               />
             </div>
           </div>
-
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -146,7 +140,6 @@ const Login = () => {
               />
             </div>
           </div>
-
           <div className="flex justify-between items-center">
             <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 transition-colors">
               Forgot Password?
@@ -155,7 +148,6 @@ const Login = () => {
               Need an account? Sign Up
             </Link>
           </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -168,8 +160,6 @@ const Login = () => {
           </button>
         </form>
       </div>
-
-      {/* Custom Animations */}
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
