@@ -1,0 +1,194 @@
+SYSTEM STRUCTURE AND FLOW
+1. Shipper (Customer) User Flow
+A. Account Creation & Login
+ Click "Create Account"
+ Enter Name, Email, Phone Number, and Password
+ Select User Type: Shipper (Customer)
+ Verify phone number via OTP (One-Time Password)
+ Click "Submit" and login
+B. Login Process
+ Open the app and enter Email/Phone + Password
+ Click “Login” → Access the User Dashboard
+C. Click "New Shipment" on the dashboard
+ Enter From and To
+ Select mode of shipping. Air/Sea
+ Enter shipment details: Weight or CBM
+ Select Shipping Agent
+ List of Gold agents showing live prices
+ Pre-Selected Agent (The top gold agent at that moment, showing the best live
+price)
+ Users don’t have to select anything the suggested Agent is automatic with a gentle
+nudge:
+"Best Choice for Grouped Delivery Today!"
+"Lowest Final Price Due to Higher Cargo Volume!"
+ Click “Other” to see other available shipping agents with their prices
+ Users can still pick any shipping agent, If they click to select another, there is no
+forced restriction but a gentle nudge:
+ “This shipping agent does not have an aggregation campaign today. The final
+cost may be higher”
+ “Do you still want to continue with this choice today?” YES or SELECT PREFERRED.
+ Click "Get Discount Code". (Customers who use standard agents will not get the
+aggregation/discount code but will get the label and address). They will click “warehouse
+details”
+ System generates a unique Aggregation/Discount Code
+ System generates a label containing: Customer Name, Phone Number, Destination,
+Mode of Shipping and Aggregation/Discount code.
+ System generates agent’s foreign warehouse address.
+ Shipper/Customer shares label and address with his/her supplier.
+ Shipper through the supplier arranges for the cargo to reach the shipping agent’s
+foreign warehouse
+D. Click “Today’s Top Agent” On the dashboard
+ Select route (From – To)
+ Select either Air or Sea
+ Suggested Gold Agent is pre-selected, showing the live prices, other Gold agent(s) follow
+ View Cargo aggregation progress
+ Total Volume or Weight
+ Number of customers/senders
+ Estimated final price per KG or CBM
+ Click Send New Shipment. Takes you to (New Shipment)
+ Enter Shipment Details (Route and Agent is entered automatically)
+ Countdown timer showing offer closing time
+ Click Other. To select a different agent (If they click to select another, there is no forced
+restriction but a gentle nudge)
+E. Click “My Cargo” on the dashboard
+ Dashboard updates with:
+ Your Cargo in CBM/KG
+ Total Aggregated Cargo (CBM) or Weight (for air)
+ Estimated Final Price and Current Confirmed Price per 0.1 CBM
+ Estimated Final Price and Current Confirmed Price per KG
+Estimated Final Price dynamically updates as more people join the group
+shipment (express interest by generating an aggregation code)
+Current Confirmed Price dynamically updates as more cargo is confirmed at the
+foreign warehouse or as more cargo is collected at the local warehouse.
+F. Click History on the dashboard
+ List of Cargo sent via the platform (start with the most recent)
+ Select a shipment
+ See Non-discounted price (without discount)
+ Shipment Status
+ Waiting drop off at foreign warehouse (Discount Code and address displayed)
+ Dropped off at foreign warehouse (Discount Code displayed)
+ Collected
+ Discounted price
+ Refund amount if any
+G. Click Refunds on the dashboard
+ Total Refunds
+ Withdraw
+Cargo Arrival & Payment
+ Shipping Agent confirms cargo at foreign warehouse by entering the Discount Code
+ Cargo is assigned to the next ship/flight
+ Once cargo is confirmed and assigned, Current Confirmed Price is updated automatically by
+the system.
+ Shipper gets notification:
+ "Your cargo has been confirmed and assigned to X. Current actual price is at Y, price
+may keep falling as more cargo comes in."
+ When cargo arrives at the local warehouse, the system is able to calculate the final actual
+cost for individual shipments from the confirmed aggregation codes.
+ Shipper visits the local warehouse, presents his/her Aggregation Code, gets a digital invoice
+sent to his account and pays a sum of the discounted shipping fee plus 20% platform’s
+commission.
+ Shipper signs off on cargo collection form
+2. Shipping Agent (Company) User Flow
+A. Click "Create Account" On the dashboard
+ Enter Company Details: Name, Business Registration Number, Contact Person, and Email
+ Set Password and Verify via OTP
+ Submit for Admin Approval
+ Once approved, login to dashboard
+B. Click log in
+• Open the app and enter Email/Phone + Password
+• Click “Login” → Access the User Dashboard
+C. Click “Shipping Routes” on the dashboard
+ Shows a list of different routes served by the agent
+ Edit Route
+ Click “Create New Route”
+ Enter From and To
+ Enter Sea price/CBM
+ Enter Air Price/KG
+ Enter Minimum KG for air (Default 1KG)
+ Enter Minimum CBM for sea (Default 0.1CBM)
+ Submit
+D. Click “Gold Plan” on the dashboard
+ Open Bids (List of routes with open bids)
+ Up-Coming Bids (List of routes with upcoming bids and when each bid will open e.g.
+Route Y Opens in X days)
+ Select Route
+ Select either Air or Sea
+ Enter Base Price
+ Enter Discount % (a % of the base price)
+ Click “Send bid”
+ Option for Auto bidding (In auto bidding no change in base price and discount %, most
+recent bidding rates apply)
+ Option to load money to wallet
+E. Click “Foreign warehouse” on the dashboard
+ Click "Confirm Discount"
+ Shipper will have sent an Discount Code or it is written on the cargo packaging
+ Agent enters Discount Code into the system
+ System confirms the code
+ Enter Actual Weight/CBM
+ Assign cargo to the next flight/ship (shipment Start date and End date)
+ Click submit
+ System adjusts Weight/CBM and makes updates to the Current Actual Price
+F. Click "Local Warehouse" on the dashboard
+ When a shipper arrives for pickup, request Discount Code
+ Enter Discount Code. If not assigned, update weight/CBM, assign cargo to the correct
+shipment to generate invoice for shipper with the amount to pay (discounted shipping fee +
+commission).
+ Verify payment status before releasing cargo
+G. Click “Shipments” on the dashboard
+ Shows all ongoing shipments and their status
+ Select: Route → Dates to see shipment under specific period
+ View Total CBM /KGS Aggregated (Confirmed & Unconfirmed)
+ Track Estimated vs. Final Prices
+H. Click “Commission and Refunds” on the dashboard
+ Shipping Agent views commission owed to the aggregator and refunds owed to customers
+ Payment and refunds are made to aggregator at the end of the shipping cycle
+3. Admin (Aggregator) User Flow
+A. Account Creation & Login
+ Click "Admin Login"
+ Enter Username & Password
+ Access Admin Dashboard
+B. Click “Create Bid” on the dashboard
+ Select route (From – To)
+ Select mode
+ Sea
+ Air
+ Enter Base Volume/weight:
+ Sea Cargo : 0.1 CBM
+ Air Cargo : 1 KG
+ Enter Targeted CBM/KGS (when the prices will start to fall. Discount starts applying from: e.g.
+ Sea Cargo : 0.2 CBM
+ Air Cargo : 2KG
+ Enter Targeted CBM/KGS (when the price will stop falling. Discounting Stops at: e.g.
+ Sea Cargo : 10 CBM
+ Air Cargo : 100KG.
+ Enter Offer Duration
+ Air 15days
+ Sea 30 days
+ Enter Frequency
+ Air Every 15 days
+ Sea Every 30 days
+ Select Submit
+C. Click “Shipments” on the dashboard
+ Shows all ongoing shipments
+ Select: Route → agent to see shipment under specific agents
+ View Total CBM /KGS Aggregated (Confirmed & Unconfirmed)
+ Track Estimated vs. Final Prices
+D. Click “Management” on the dashboard
+ Approve or reject Shipping Agent Accounts
+ Handle customer support tickets
+E. Click “Refunds and Commission” on the dashboard
+ System auto-generates commission and refunds reports
+ Admin verifies commission invoices and customer refunds from Shipping Agents
+ Track customer payments at local warehouse
+ Admin refunds discounts to shippers/customers who paid before the final price was determined
+ Resolve any payment disputes
+Key System Automations
+ Price Auto-Adjustment: The system dynamically updates the price per 0.1 CBM/ 1 KG as more
+cargo is aggregated.
+ Aggregation Code Tracking: Ensures only confirmed cargo affects final pricing.
+ Commission Auto-Calculation: Shipping agents cannot manipulate pricing since they only see
+final pricing after confirming aggregation codes.
+ Signed Pickup Records: Protects against disputes by ensuring customers sign for received cargo.
+PLEASE NOTE THE FOLLOWING
+o The tables in red are just explanations to help you design the features
+o The shipping agent section is a native APP. The other 2 (Customers/shippers and admin) are web
+Apps

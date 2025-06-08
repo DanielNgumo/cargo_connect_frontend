@@ -1,9 +1,10 @@
 import  { useState, useEffect } from 'react';
 import {  Ship, Plane, Package, Users, TrendingDown, Globe, ChevronRight, Star, Shield, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const [currentStat, setCurrentStat] = useState(0);
-  
+  const navigate = useNavigate();
   const stats = [
     { number: "50%", label: "Average Savings", icon: TrendingDown },
     { number: "10K+", label: "Shipments Sent", icon: Package },
@@ -74,10 +75,14 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <button className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-semibold flex items-center justify-center space-x-2">
-                <span>Start Shipping Now</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+<button
+  onClick={() => navigate('/login')}
+  className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-semibold flex items-center justify-center space-x-2"
+>
+  <span>Start Shipping Now</span>
+  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+</button>
+
               <button className="group bg-white/80 backdrop-blur-sm text-gray-700 px-8 py-4 rounded-full hover:bg-white hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center space-x-2">
                 <span>Watch Demo</span>
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
