@@ -83,7 +83,7 @@ const Navbar = () => {
       case 'shipper':
         return (
           <>
-            <Link to="/book-shipment" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Book Shipment</Link>
+            <Link to="/shipper/book-shipment" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Book Shipment</Link>
             <button
               onClick={handleLogout}
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium flex items-center space-x-1"

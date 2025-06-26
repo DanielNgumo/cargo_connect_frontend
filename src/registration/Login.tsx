@@ -20,8 +20,8 @@ const Login = () => {
     console.log('Login attempt', { email, timestamp: new Date().toISOString() });
 
     try {
-      await axios.get('/sanctum/csrf-cookie', { withCredentials: true });
-      const response = await axios.post('/api/login', { login: email, password }, {
+      await axios.get('http://127.0.0.1:8000/sanctum/csrf-cookie', { withCredentials: true });
+      const response = await axios.post('http://127.0.0.1:8000/api/login', { login: email, password }, {
         headers: { 'Accept': 'application/json' },
         withCredentials: true,
       });
@@ -45,10 +45,10 @@ const Login = () => {
           if (!data.user.is_approved) {
             navigate('/pending-approval');
           } else {
-            navigate('/agent-dashboard');
+            navigate('/agent');
           }
         } else if (data.user.user_type === 'shipper') {
-          navigate('/book-shipment');
+          navigate('/shipper/book-shipment');
         }
       }, 500);
     } catch (err: any) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 import { Loader2, Gavel, MapPin, Ship, Plane, Calendar, Eye, Trash2 } from 'lucide-react';
 
 interface Route {
@@ -23,6 +23,21 @@ interface BidOpportunity {
   route: Route;
 }
 
+interface Bid {
+  id: number;
+  agent_id: number;
+  bid_opportunity_id: number;
+  mode: 'air' | 'sea';
+  base_price: number;
+  discount_percentage: number;
+  is_auto_bid: boolean;
+  created_at: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  route: Route | null;
+}
+
 const Bids: React.FC = () => {
   const [formData, setFormData] = useState({
     route_id: '',
@@ -38,14 +53,23 @@ const Bids: React.FC = () => {
   });
   const [routes, setRoutes] = useState<Route[]>([]);
   const [bidOpportunities, setBidOpportunities] = useState<BidOpportunity[]>([]);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [selectedBidOpportunityId, setSelectedBidOpportunityId] = useState<number | null>(null);
+  const [showBidsModal, setShowBidsModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
 
-  // Get current time in ISO format for min attribute
+  // Get current date in YYYY-MM-DD format
+  const getToday = () => {
+    const now = new Date();
+    return now.toISOString().slice(0, 10); // e.g., 2025-06-26
+  };
+
+  // Get current date and time in ISO format for min attribute
   const getCurrentTime = () => {
     const now = new Date();
-    return now.toISOString().slice(0, 16);
+    return now.toISOString().slice(0, 16); // e.g., 2025-06-26T18:02
   };
 
   useEffect(() => {
@@ -64,7 +88,15 @@ const Bids: React.FC = () => {
         await refreshBidOpportunities();
       } catch (err: any) {
         setError(err.message);
-        toast.error(err.message, { position: 'top-right', autoClose: 5000 });
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.message,
+          position: 'top-end',
+          timer: 5000,
+          showConfirmButton: false,
+          toast: true,
+        });
       } finally {
         setLoading(false);
       }
@@ -96,23 +128,47 @@ const Bids: React.FC = () => {
         console.log(`Retrying fetch bids (${retryCount + 1}/${maxRetries})...`);
         setTimeout(() => refreshBidOpportunities(retryCount + 1, maxRetries), 1000);
       } else {
-        toast.error('Failed to refresh bid opportunities', { position: 'top-right', autoClose: 5000 });
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to refresh bid opportunities',
+          position: 'top-end',
+          timer: 5000,
+          showConfirmButton: false,
+          toast: true,
+        });
       }
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'start_date' && formData.status === 'open') {
+      const selectedDate = new Date(value);
+      const today = new Date(getToday());
+      if (selectedDate > today) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid Date',
+          text: 'Open dates must start from today',
+          position: 'top-end',
+          timer: 5000,
+          showConfirmButton: false,
+          toast: true,
+        });
+        return;
+      }
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const status = e.target.value as 'open' | 'upcoming';
-    const now = new Date().toISOString().slice(0, 16);
-    
+    const startDate = status === 'open' ? getToday() : formData.start_date;
     setFormData(prev => ({
       ...prev,
       status,
-      start_date: status === 'open' ? now : prev.start_date
+      start_date: startDate,
     }));
   };
 
@@ -124,16 +180,33 @@ const Bids: React.FC = () => {
     const now = new Date();
     const startDate = new Date(formData.start_date);
     const endDate = new Date(formData.end_date);
+    const today = new Date(getToday());
 
     // Validate status-date relationship
     if (formData.status === 'upcoming' && startDate <= now) {
-      toast.error('Upcoming bids require a future start date', { position: 'top-right', autoClose: 5000 });
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Date',
+        text: 'Upcoming bids require a future start date',
+        position: 'top-end',
+        timer: 5000,
+        showConfirmButton: false,
+        toast: true,
+      });
       setLoading(false);
       return;
     }
-    
-    if (formData.status === 'open' && startDate > now) {
-      toast.error('Open bids require current/past start date', { position: 'top-right', autoClose: 5000 });
+
+    if (formData.status === 'open' && startDate > today) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Date',
+        text: 'Open bids require current/past start date',
+        position: 'top-end',
+        timer: 5000,
+        showConfirmButton: false,
+        toast: true,
+      });
       setLoading(false);
       return;
     }
@@ -149,8 +222,7 @@ const Bids: React.FC = () => {
       if (parseInt(formData.frequency) <= 0) throw new Error('Frequency must be positive');
       if (!formData.start_date) throw new Error('Please select a start date');
       if (!formData.end_date) throw new Error('Please select an end date');
-      if (new Date(formData.end_date) <= new Date(formData.start_date))
-        throw new Error('End date must be after start date');
+      if (endDate <= startDate) throw new Error('End date must be after start date');
       if (!formData.status) throw new Error('Please select a status');
 
       const response = await fetch('/api/admin/bids', {
@@ -199,15 +271,121 @@ const Bids: React.FC = () => {
         end_date: '',
         status: 'open',
       });
-      toast.success('Bid opportunity created successfully!', { position: 'top-right', autoClose: 3000 });
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Bid opportunity created successfully!',
+        position: 'top-end',
+        timer: 3000,
+        showConfirmButton: false,
+        toast: true,
+      });
       await refreshBidOpportunities();
       setActiveTab('view');
     } catch (err: any) {
       setError(err.message);
-      toast.error(err.message, { position: 'top-right', autoClose: 5000 });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message,
+        position: 'top-end',
+        timer: 5000,
+        showConfirmButton: false,
+        toast: true,
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async (id: number) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This will permanently delete the bid opportunity!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#0d9488',
+      cancelButtonColor: '#f87171',
+      confirmButtonText: 'Yes, delete it!',
+      position: 'center',
+    });
+
+    if (result.isConfirmed) {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/admin/bids/${id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to delete bid opportunity');
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          text: 'Bid opportunity deleted successfully!',
+          position: 'top-end',
+          timer: 3000,
+          showConfirmButton: false,
+          toast: true,
+        });
+        await refreshBidOpportunities();
+      } catch (err: any) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.message,
+          position: 'top-end',
+          timer: 5000,
+          showConfirmButton: false,
+          toast: true,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleViewBids = async (id: number) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/bids/${id}/bids`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to fetch bids');
+      }
+      const data = await response.json();
+      setBids(data.bids || []);
+      setSelectedBidOpportunityId(id);
+      setShowBidsModal(true);
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message,
+        position: 'top-end',
+        timer: 5000,
+        showConfirmButton: false,
+        toast: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeBidsModal = () => {
+    setShowBidsModal(false);
+    setSelectedBidOpportunityId(null);
+    setBids([]);
   };
 
   return (
@@ -393,13 +571,14 @@ const Bids: React.FC = () => {
                   <label className="block text-sm font-medium text-teal-700 mb-2">Start Date</label>
                   <Calendar className="w-5 h-5 text-teal-400 absolute left-3 top-10" />
                   <input
-                    type="datetime-local"
+                    type={formData.status === 'open' ? 'date' : 'datetime-local'}
                     name="start_date"
                     value={formData.start_date}
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    min={formData.status === 'open' ? undefined : getCurrentTime()}
+                    min={formData.status === 'upcoming' ? getCurrentTime() : undefined}
+                    max={formData.status === 'open' ? getToday() : undefined}
                     className="w-full pl-10 pr-4 py-2 border border-teal-200 rounded-md bg-teal-50 text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all disabled:opacity-50 hover:bg-teal-100"
                   />
                 </div>
@@ -512,10 +691,18 @@ const Bids: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-4 py-2 text-sm text-teal-800">
-                            <button className="text-blue-500 hover:text-blue-700 mr-2">
+                            <button
+                              onClick={() => handleViewBids(bid.id)}
+                              className="text-blue-500 hover:text-blue-700 mr-2"
+                              disabled={loading}
+                            >
                               <Eye className="w-5 h-5" />
                             </button>
-                            <button className="text-red-500 hover:text-red-700">
+                            <button
+                              onClick={() => handleDelete(bid.id)}
+                              className="text-red-500 hover:text-red-700"
+                              disabled={loading}
+                            >
                               <Trash2 className="w-5 h-5" />
                             </button>
                           </td>
@@ -529,6 +716,58 @@ const Bids: React.FC = () => {
           )}
         </div>
       </div>
+
+      {showBidsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-teal-700">Bids for Opportunity #{selectedBidOpportunityId}</h3>
+              <button
+                onClick={closeBidsModal}
+                className="text-teal-600 hover:text-teal-800"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {bids.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-teal-600">No bids found for this opportunity.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-teal-200">
+                  <thead className="bg-teal-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Agent ID</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Mode</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Base Price</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Discount %</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Auto Bid</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-teal-100">
+                    {bids.map((bid) => (
+                      <tr key={bid.id} className="hover:bg-teal-50 transition-colors">
+                        <td className="px-4 py-2 text-sm text-teal-800">{bid.agent_id}</td>
+                        <td className="px-4 py-2 text-sm text-teal-800">{bid.mode}</td>
+                        <td className="px-4 py-2 text-sm text-teal-800">{bid.base_price}</td>
+                        <td className="px-4 py-2 text-sm text-teal-800">{bid.discount_percentage}%</td>
+                        <td className="px-4 py-2 text-sm text-teal-800">{bid.is_auto_bid ? 'Yes' : 'No'}</td>
+                        <td className="px-4 py-2 text-sm text-teal-800">
+                          {new Date(bid.created_at).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
