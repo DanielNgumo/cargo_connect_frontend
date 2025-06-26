@@ -14,7 +14,8 @@ import {
   FileText,
   Bell,
   Search,
-  ChevronDown
+  ChevronDown,
+  Gavel // Added for Bids icon
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -47,6 +48,15 @@ const AdminDashboard = () => {
       icon: Route,
       description: 'Route administration',
       path: '/admin/routes'
+    },
+    {
+      id: 'bids', // New Bids item
+      name: 'Manage Bids',
+      icon: Gavel,
+      description: 'Create and monitor bids',
+      badge: '5',
+      color: 'bg-purple-100 text-purple-700',
+      path: '/admin/bids'
     },
     {
       id: 'invoices',
@@ -89,7 +99,7 @@ const AdminDashboard = () => {
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden"
+          className="fixed inset-0 z-b0 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         >
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>

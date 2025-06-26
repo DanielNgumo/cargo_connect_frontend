@@ -4,7 +4,6 @@ import LandingPage from './landing/LandingPage';
 import Login from './registration/Login';
 import SignUp from './registration/Signup';
 import PendingApproval from './registration/PendingApproval';
-import CreateRoute from './routes/CreateRoute';
 import AdminDashboard from './admin/AdminDashboard';
 import PendingAgents from './admin/PendingAgents';
 import ManageUsers from './admin/ManageUsers';
@@ -13,7 +12,9 @@ import Reports from './admin/Reports';
 import AdminSettings from './admin/AdminSettings';
 import BookShipment from './landing/BookShipment';
 import Invoices from './shipper/Invoices';
-import Bids from './shipper/Bids';
+import Bids from './admin/Bids';
+import MainDashboard from './agent/MainDashboard';
+
 
 function AppContent() {
   const location = useLocation();
@@ -27,7 +28,8 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/pending-approval" element={<PendingApproval />} />
-        <Route path="/create-route" element={<CreateRoute />} />
+        {/* <Route path="/create-route" element={<CreateRoute />} /> */}
+        <Route path="/agent-dashboard" element={<MainDashboard />} />
         <Route path="/book-shipment" element={<BookShipment />} />
         <Route path="/bids" element={<Bids />} />
         
@@ -42,6 +44,7 @@ function AppContent() {
           <Route path="invoices" element={<Invoices />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="bids" element={<Bids />} />
         </Route>
       </Routes>
     </>

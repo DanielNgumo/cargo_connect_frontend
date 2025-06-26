@@ -45,7 +45,7 @@ const Login = () => {
           if (!data.user.is_approved) {
             navigate('/pending-approval');
           } else {
-            navigate('/create-route');
+            navigate('/agent-dashboard');
           }
         } else if (data.user.user_type === 'shipper') {
           navigate('/book-shipment');
